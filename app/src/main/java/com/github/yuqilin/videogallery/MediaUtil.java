@@ -170,7 +170,7 @@ public class MediaUtil {
         BitmapFactory.Options options = new BitmapFactory.Options();
         options.inSampleSize = 1;
         Bitmap thumbBitmap = MediaStore.Video.Thumbnails.getThumbnail(MyApplication.getAppContext().getContentResolver(),
-                id, MediaStore.Video.Thumbnails.MINI_KIND, options);
+                id, MediaStore.Video.Thumbnails.MINI_KIND, null);
         return thumbBitmap;
     }
 
@@ -223,26 +223,31 @@ public class MediaUtil {
         String thumbnailPath = buildThumbnailPath(media);
 
         // Query Thumbnails table
-//        if (TextUtils.isEmpty(media.getThumbnailPath())) {
-//            long startTime = System.currentTimeMillis();
-//            String thumbnail = MediaUtil.queryMediaThumbnail(media.getId());
-//            if (FileUtil.copyFile(thumbnail, thumbnailPath) && FileUtil.invalidFile(thumbnailPath)) {
-//                media.setThumbnailPath(thumbnailPath);
-//            } else {
-//                LogUtil.e(TAG, "copyFile failed: src : " + thumbnail + ", dst : " + thumbnailPath);
-//            }
-//            LogUtil.d(TAG, " query thumb costtime : " + (System.currentTimeMillis() - startTime) + ", mediaId : " + media.getId() + ", thumbPath : " + media.getThumbnailPath());
-//        }
+        if (TextUtils.isEmpty(media.getThumbnailPath()) || !FileUtil.exists(media.getThumbnailPath())) {
+            long startTime = System.currentTimeMillis();
+            String thumbnail = MediaUtil.queryMediaThumbnail(media.getId());
+            if (FileUtil.copyFile(thumbnail, thumbnailPath) && FileUtil.invalidFile(thumbnailPath)) {
+                media.setThumbnailPath(thumbnailPath);
+            } else {
+                LogUtil.e(TAG, "copyFile failed: src : " + thumbnail + ", dst : " + thumbnailPath);
+            }
+            LogUtil.d(TAG, " query thumb costtime : " + (System.currentTimeMillis() - startTime) + ", mediaId : " + media.getId() + ", thumbPath : " + media.getThumbnailPath());
+        }
 
         Bitmap thumbBitmap = null;
         // MediaStore getThumbnail
-        if (TextUtils.isEmpty(media.getThumbnailPath())) {
+        if (TextUtils.isEmpty(media.getThumbnailPath()) || !FileUtil.exists(media.getThumbnailPath())) {
             long startTime = System.currentTimeMillis();
             thumbBitmap = MediaUtil.getMediaThumbnail(media.getId());
             if (MediaUtil.saveBitmapToFile(thumbBitmap, thumbnailPath) && FileUtil.invalidFile(thumbnailPath)) {
+                BitmapCache.getInstance().addBitmapToMemCache(thumbnailPath, thumbBitmap);
                 media.setThumbnailPath(thumbnailPath);
             }
             LogUtil.d(TAG, " getThumbnail costtime : " + (System.currentTimeMillis() - startTime) + ", mediaId : " + media.getId() + ", thumbPath : " + media.getThumbnailPath());
+        }
+
+        if (thumbBitmap == null) {
+            thumbBitmap = readThumbnailBitmap(media.getThumbnailPath(), media.getWidth());
         }
         return thumbBitmap;
 

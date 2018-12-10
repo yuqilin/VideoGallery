@@ -6,6 +6,7 @@ import android.os.AsyncTask;
 import android.os.Handler;
 import android.os.Looper;
 import android.support.v7.widget.RecyclerView;
+import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -73,6 +74,14 @@ public class VideoListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHold
 
         if (viewHolder.thumbnail != null) {
             viewHolder.thumbnail.setTag(media);
+            viewHolder.thumbnail.setImageResource(R.drawable.ic_thumbnail_default);
+//            Bitmap bitmap = BitmapCache.getInstance().getBitmapFromMemCache(media.getThumbnailPath());
+//            if (bitmap != null) {
+//                viewHolder.thumbnail.setImageBitmap(bitmap);
+//            } else {
+//
+//                new ThumbnailAsyncTask(viewHolder.thumbnail, media).execute();
+//            }
             new ThumbnailAsyncTask(viewHolder.thumbnail, media).execute();
         }
 //        AsyncImageLoader.loadThumbnail(viewHolder.thumbnail, media);
@@ -131,7 +140,14 @@ public class VideoListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHold
         @Override
         protected Bitmap doInBackground(String... strings) {
 
-            Bitmap thumbnail = MediaUtil.readThumbnailBitmap(media.getThumbnailPath(), media.getWidth());
+//            Bitmap thumbnail = MediaUtil.readThumbnailBitmap(media.getThumbnailPath(), media.getWidth());
+
+            long startTime = System.currentTimeMillis();
+//            Bitmap thumbnail = MediaUtil.getMediaThumbnail(media.getId());
+//            String path = MediaUtil.queryMediaThumbnail(media.getId());
+//            Bitmap thumbnail = MediaUtil.readThumbnailBitmap(path, media.getWidth());
+            Bitmap thumbnail = MediaUtil.retrieveMediaThumbnail(media);
+            LogUtil.d(TAG, "ThumbnailAsyncTask getMediaThumbnail id : " + media.getId() + ", costtime : " + (System.currentTimeMillis() - startTime));
 
             return thumbnail;
         }
@@ -140,7 +156,7 @@ public class VideoListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHold
         protected void onPostExecute(Bitmap bitmap) {
             super.onPostExecute(bitmap);
             ImageView v = imageView.get();
-            if (v != null && v.getTag().equals(media)) {
+            if (v != null && v.getTag() == media) {
                 v.setVisibility(View.VISIBLE);
                 v.setScaleType(ImageView.ScaleType.CENTER_CROP);
                 v.setImageBitmap(bitmap);

@@ -65,6 +65,11 @@ public class MediaLibrary {
                 MEDIASTORE_VIDEO_VIDEOCOLUMNS_HEIGHT
         };
 
+        String[] thumbnailColumns = new String[] {
+                MediaStore.Video.Thumbnails.DATA,
+                MediaStore.Video.Thumbnails.VIDEO_ID
+        };
+
         ArrayList<MediaWrapper> newVideos = new ArrayList<>();
 
         ContentResolver contentResolver = MyApplication.getAppContext().getContentResolver();
@@ -85,7 +90,8 @@ public class MediaLibrary {
                 }
 //                checkMediaInfo(media);
 
-                retrieveMediaThumbnail(media);
+//                retrieveMediaThumbnail(media);
+                media.setThumbnailPath(MediaUtil.queryMediaThumbnail(media.getId()));
 
                 if (BuildConfig.DEBUG) {
                     MediaWrapper.dumpMediaWrapper(media);
